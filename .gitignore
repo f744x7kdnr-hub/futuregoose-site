@@ -1,0 +1,5 @@
+config.local.js
+.env.local
+.env
+.vercel
+*.log
