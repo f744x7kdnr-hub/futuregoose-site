@@ -415,6 +415,13 @@ h1 {
   font-style: italic;
 }
 
+.message-heading {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 1.05em;
+}
+
 .message-table-wrap {
   max-width: 100%;
   margin: 10px 0;

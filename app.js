@@ -84,8 +84,10 @@ const renderMarkdownLite = (content) => {
       continue;
     }
 
-    const heading = lines[index].match(/^###\s+(.*)$/);
-    output.push(heading ? `<strong>${renderInline(heading[1])}</strong>` : renderInline(lines[index]));
+    const heading = lines[index].match(/^#{1,6}\s+(.*)$/);
+    output.push(
+      heading ? `<strong class="message-heading">${renderInline(heading[1])}</strong>` : renderInline(lines[index]),
+    );
     if (index < lines.length - 1) output.push("<br />");
   }
 
