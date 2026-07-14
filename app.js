@@ -100,6 +100,26 @@ const renderChat = () => {
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
 };
 
+const requestAnswer = async () => {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({
+      userId: ensureUserId(),
+      messages: state.messages.slice(-8),
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || "服务暂时没有返回有效回复。");
+  }
+
+  return data;
+};
+
 const sendMessage = async (content) => {
   if (state.isSending) return;
 
@@ -108,19 +128,13 @@ const sendMessage = async (content) => {
   renderChat();
 
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: ensureUserId(),
-        messages: state.messages.slice(-8),
-      }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(data.error || "后端暂时没有返回有效回复。");
+    let data;
+    try {
+      data = await requestAnswer();
+    } catch (firstError) {
+      console.warn("FutureGoose first request failed, retrying once.", firstError);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      data = await requestAnswer();
     }
 
     state.messages.push({
@@ -131,7 +145,7 @@ const sendMessage = async (content) => {
     state.messages.push({
       role: "assistant",
       content:
-        "我现在还没有连上后端服务。部署到 Vercel 并配置 COZE_API_TOKEN 后，就可以在这里直接对话。当前页面仍可用于展示产品流程和交互入口。",
+        "服务刚刚开了个小差，这次没有成功生成回答。请稍后重新发送，或点击下方示例问题再试一次。",
     });
     console.error(error);
   } finally {
