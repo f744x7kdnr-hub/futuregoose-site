@@ -122,7 +122,13 @@ module.exports = async function handler(req, res) {
       const status = retrieved.data?.status;
 
       if (["failed", "requires_action"].includes(status)) {
-        res.status(502).json({ error: `Coze chat ended with status: ${status}` });
+        const lastError = retrieved.data?.last_error || {};
+        const detail = lastError.msg || lastError.message || lastError.code;
+        console.error("Coze chat failed:", { status, lastError });
+        res.status(502).json({
+          error: detail ? `Coze chat failed: ${detail}` : `Coze chat ended with status: ${status}`,
+          code: lastError.code || "",
+        });
         return;
       }
 
