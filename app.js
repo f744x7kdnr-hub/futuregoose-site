@@ -101,7 +101,7 @@ const renderChat = () => {
 };
 
 const requestAnswer = async () => {
-  const response = await fetch("/api/chat", {
+  const createResponse = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
@@ -111,15 +111,57 @@ const requestAnswer = async () => {
     }),
   });
 
-  const data = await response.json().catch(() => ({}));
+  const chat = await createResponse.json().catch(() => ({}));
 
-  if (!response.ok) {
-    const error = new Error(data.error || "服务暂时没有返回有效回复。");
-    error.status = response.status;
+  if (!createResponse.ok) {
+    const error = new Error(chat.error || "服务暂时没有返回有效回复。");
+    error.status = createResponse.status;
     throw error;
   }
 
-  return data;
+  if (!chat.conversationId || !chat.chatId) {
+    throw new Error("服务没有返回有效的对话编号。");
+  }
+
+  const query = new URLSearchParams({
+    conversationId: chat.conversationId,
+    chatId: chat.chatId,
+  });
+  const pollingDeadline = Date.now() + 90000;
+  let consecutiveNetworkErrors = 0;
+
+  while (Date.now() < pollingDeadline) {
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    try {
+      const statusResponse = await fetch(`/api/chat?${query}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const data = await statusResponse.json().catch(() => ({}));
+
+      if (statusResponse.status === 202) {
+        consecutiveNetworkErrors = 0;
+        continue;
+      }
+
+      if (!statusResponse.ok) {
+        const error = new Error(data.error || "服务暂时没有返回有效回复。");
+        error.status = statusResponse.status;
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      if (error.status) throw error;
+      consecutiveNetworkErrors += 1;
+      if (consecutiveNetworkErrors >= 3) throw error;
+    }
+  }
+
+  const error = new Error("回答生成时间过长，请稍后重试。");
+  error.status = 504;
+  throw error;
 };
 
 const sendMessage = async (content) => {
@@ -130,15 +172,7 @@ const sendMessage = async (content) => {
   renderChat();
 
   try {
-    let data;
-    try {
-      data = await requestAnswer();
-    } catch (firstError) {
-      if (firstError.status) throw firstError;
-      console.warn("FutureGoose first request failed, retrying once.", firstError);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      data = await requestAnswer();
-    }
+    const data = await requestAnswer();
 
     state.messages.push({
       role: "assistant",

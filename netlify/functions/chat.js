@@ -9,6 +9,8 @@ exports.handler = async (event) => {
     method: event.httpMethod,
     body: event.body || "",
     headers: event.headers || {},
+    query: event.queryStringParameters || {},
+    url: event.rawUrl || event.path || "/api/chat",
   };
 
   const res = {

@@ -1,5 +1,3 @@
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const parseBody = (req) => {
   if (req.body && typeof req.body === "object") return req.body;
   if (typeof req.body === "string") {
@@ -10,6 +8,16 @@ const parseBody = (req) => {
     }
   }
   return {};
+};
+
+const parseQuery = (req) => {
+  if (req.query && typeof req.query === "object") return req.query;
+
+  try {
+    return Object.fromEntries(new URL(req.url || "/", "http://localhost").searchParams.entries());
+  } catch {
+    return {};
+  }
 };
 
 const callCoze = async (path, options = {}) => {
@@ -78,16 +86,17 @@ const getAnswerFromMessages = (payload) => {
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "OPTIONS") {
     res.status(204).end();
     return;
   }
 
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Only POST is supported." });
+  if (!["GET", "POST"].includes(req.method)) {
+    res.status(405).json({ error: "Only GET and POST are supported." });
     return;
   }
 
@@ -97,6 +106,45 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (req.method === "GET") {
+      const query = parseQuery(req);
+      const conversationId = String(query.conversationId || "").slice(0, 64);
+      const chatId = String(query.chatId || "").slice(0, 64);
+
+      if (!/^\d+$/.test(conversationId) || !/^\d+$/.test(chatId)) {
+        res.status(400).json({ error: "Valid conversation and chat identifiers are required." });
+        return;
+      }
+
+      const retrieved = await callCoze(
+        `/v3/chat/retrieve?conversation_id=${encodeURIComponent(conversationId)}&chat_id=${encodeURIComponent(chatId)}`,
+      );
+      const status = retrieved.data?.status;
+
+      if (["failed", "requires_action"].includes(status)) {
+        res.status(502).json({ error: `Coze chat ended with status: ${status}` });
+        return;
+      }
+
+      if (status !== "completed") {
+        res.status(202).json({ status: status || "in_progress", conversationId, chatId });
+        return;
+      }
+
+      const messageList = await callCoze(
+        `/v3/chat/message/list?conversation_id=${encodeURIComponent(conversationId)}&chat_id=${encodeURIComponent(chatId)}`,
+      );
+      const answer = getAnswerFromMessages(messageList);
+
+      if (!answer) {
+        res.status(202).json({ status: "finalizing", conversationId, chatId });
+        return;
+      }
+
+      res.status(200).json({ answer, status, conversationId, chatId });
+      return;
+    }
+
     const body = parseBody(req);
     const userId = String(body.userId || "futuregoose-demo-user").slice(0, 64);
     const messages = normalizeMessages(body.messages || []);
@@ -125,33 +173,8 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    let status = chat.data?.status;
-    const pollingDeadline = Date.now() + 50000;
-    while (
-      Date.now() < pollingDeadline &&
-      status &&
-      !["completed", "failed", "requires_action"].includes(status)
-    ) {
-      await sleep(750);
-      const retrieved = await callCoze(
-        `/v3/chat/retrieve?conversation_id=${encodeURIComponent(conversationId)}&chat_id=${encodeURIComponent(chatId)}`,
-      );
-      status = retrieved.data?.status;
-    }
-
-    if (status && status !== "completed") {
-      res.status(502).json({ error: `Coze chat ended with status: ${status}` });
-      return;
-    }
-
-    const messageList = await callCoze(
-      `/v3/chat/message/list?conversation_id=${encodeURIComponent(conversationId)}&chat_id=${encodeURIComponent(chatId)}`,
-    );
-
-    const answer = getAnswerFromMessages(messageList);
-
-    res.status(200).json({
-      answer,
+    res.status(202).json({
+      status: chat.data?.status || "in_progress",
       conversationId,
       chatId,
     });
