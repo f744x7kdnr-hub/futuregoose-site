@@ -114,7 +114,9 @@ const requestAnswer = async () => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || "服务暂时没有返回有效回复。");
+    const error = new Error(data.error || "服务暂时没有返回有效回复。");
+    error.status = response.status;
+    throw error;
   }
 
   return data;
@@ -132,6 +134,7 @@ const sendMessage = async (content) => {
     try {
       data = await requestAnswer();
     } catch (firstError) {
+      if (firstError.status) throw firstError;
       console.warn("FutureGoose first request failed, retrying once.", firstError);
       await new Promise((resolve) => setTimeout(resolve, 800));
       data = await requestAnswer();

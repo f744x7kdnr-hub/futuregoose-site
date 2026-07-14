@@ -126,8 +126,13 @@ module.exports = async function handler(req, res) {
     }
 
     let status = chat.data?.status;
-    for (let index = 0; index < 20 && status && !["completed", "failed", "requires_action"].includes(status); index += 1) {
-      await sleep(900);
+    const pollingDeadline = Date.now() + 50000;
+    while (
+      Date.now() < pollingDeadline &&
+      status &&
+      !["completed", "failed", "requires_action"].includes(status)
+    ) {
+      await sleep(750);
       const retrieved = await callCoze(
         `/v3/chat/retrieve?conversation_id=${encodeURIComponent(conversationId)}&chat_id=${encodeURIComponent(chatId)}`,
       );
