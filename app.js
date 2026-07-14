@@ -42,10 +42,54 @@ const escapeHtml = (value) =>
 
 const renderMarkdownLite = (content) => {
   const safe = escapeHtml(content);
-  return safe
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^### (.*)$/gm, "<strong>$1</strong>")
-    .replace(/\n/g, "<br />");
+  const lines = safe.split("\n");
+  const output = [];
+  const renderInline = (value) => value.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  const parseTableRow = (line) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
+    return trimmed
+      .slice(1, -1)
+      .split("|")
+      .map((cell) => cell.trim());
+  };
+  const isSeparatorRow = (cells) =>
+    cells && cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell.replace(/\s/g, "")));
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const headerCells = parseTableRow(lines[index]);
+    const separatorCells = index + 1 < lines.length ? parseTableRow(lines[index + 1]) : null;
+
+    if (headerCells && separatorCells && isSeparatorRow(separatorCells)) {
+      const rows = [];
+      index += 2;
+      while (index < lines.length) {
+        const cells = parseTableRow(lines[index]);
+        if (!cells) break;
+        rows.push(cells);
+        index += 1;
+      }
+      index -= 1;
+
+      output.push(`
+        <div class="message-table-wrap">
+          <table class="message-table">
+            <thead><tr>${headerCells.map((cell) => `<th>${renderInline(cell)}</th>`).join("")}</tr></thead>
+            <tbody>${rows
+              .map((cells) => `<tr>${cells.map((cell) => `<td>${renderInline(cell)}</td>`).join("")}</tr>`)
+              .join("")}</tbody>
+          </table>
+        </div>
+      `);
+      continue;
+    }
+
+    const heading = lines[index].match(/^###\s+(.*)$/);
+    output.push(heading ? `<strong>${renderInline(heading[1])}</strong>` : renderInline(lines[index]));
+    if (index < lines.length - 1) output.push("<br />");
+  }
+
+  return output.join("");
 };
 
 const renderChat = () => {

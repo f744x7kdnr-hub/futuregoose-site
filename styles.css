@@ -415,6 +415,47 @@ h1 {
   font-style: italic;
 }
 
+.message-table-wrap {
+  max-width: 100%;
+  margin: 10px 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.message-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message-table th,
+.message-table td {
+  padding: 9px 10px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.message-table th {
+  color: var(--teal-dark);
+  background: var(--green-soft);
+  font-weight: 800;
+}
+
+.message-table th:last-child,
+.message-table td:last-child {
+  border-right: 0;
+}
+
+.message-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
 .quick-prompts {
   padding: 12px 14px 4px;
   display: grid;
