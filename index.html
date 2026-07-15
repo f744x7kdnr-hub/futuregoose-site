@@ -7,117 +7,103 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="workspace" aria-label="未来鹅成长驾驶舱">
-        <nav class="topbar" aria-label="产品导航">
-          <div class="brand">
-            <div class="brand-mark" aria-hidden="true">FG</div>
-            <div>
-              <p class="eyebrow">FutureGoose</p>
-              <h1>未来鹅</h1>
-            </div>
-          </div>
-          <div class="status-pill">
-            <span class="status-dot" aria-hidden="true"></span>
-            AI 职业成长陪伴体
-          </div>
-        </nav>
-
-        <section class="hero-panel">
-          <div class="hero-copy">
-            <p class="kicker">面向在校大学生的职业探索行动系统</p>
-            <h2>把模糊兴趣、岗位信息和收藏夹焦虑，整理成可以执行的成长路径。</h2>
-            <p>
-              未来鹅结合年级阶段、求职成熟度、兴趣方向和已有经历，先判断你现在处在哪个探索阶段，
-              再生成岗位认知卡、收藏夹优先级和 4 周行动计划。
-            </p>
-          </div>
-
-          <div class="diagnosis-card" aria-label="MVP 流程">
-            <div class="flow-step active">
-              <span>01</span>
-              <strong>阶段诊断</strong>
-              <p>不是只问年级，而是判断求职成熟度。</p>
-            </div>
-            <div class="flow-step">
-              <span>02</span>
-              <strong>方向探索</strong>
-              <p>推荐 1-3 个适合继续了解的岗位方向。</p>
-            </div>
-            <div class="flow-step">
-              <span>03</span>
-              <strong>行动计划</strong>
-              <p>把收藏内容转化成每周可交付任务。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="insight-grid" aria-label="产品核心模块">
-          <article class="feature-card">
-            <p class="feature-index">01</p>
-            <h3>年级 + 成熟度判断</h3>
-            <p>同样是大二，有人还在探索，有人已经在准备第一段实习。未来鹅会先识别用户阶段，再给建议。</p>
-          </article>
-          <article class="feature-card accent">
-            <p class="feature-index">02</p>
-            <h3>收藏夹唤醒器</h3>
-            <p>把小红书经验帖、岗位 JD、AI 工具教程和 vibe coding 收藏，拆成优先级和下一步行动。</p>
-          </article>
-          <article class="feature-card">
-            <p class="feature-index">03</p>
-            <h3>岗位认知卡</h3>
-            <p>用学生听得懂的话解释岗位做什么、要什么能力、低年级可以先做什么。</p>
-          </article>
-          <article class="feature-card">
-            <p class="feature-index">04</p>
-            <h3>周复盘陪伴</h3>
-            <p>一周后根据完成情况调整任务，让职业探索从一次性建议变成持续行动。</p>
-          </article>
-        </section>
-
-        <section class="sample-panel" aria-label="示例输出">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">FG</div>
           <div>
-            <p class="panel-label">示例任务</p>
-            <h3>低成本原型能力</h3>
-            <p>
-              对非技术学生来说，vibe coding 不等于转技术岗，而是用 Codex、Coze 或低代码工具快速做网页、
-              智能体、调研展示页等作品。
-            </p>
+            <strong>未来鹅 FutureGoose</strong>
+            <span>大学生职业成长 AI 陪伴体</span>
           </div>
-          <div class="task-list">
-            <div class="task-row">
-              <span>本周</span>
-              <p>拆解 3 份岗位 JD，整理能力关键词。</p>
-            </div>
-            <div class="task-row">
-              <span>下周</span>
-              <p>用 Coze 搭一个职业探索问答智能体。</p>
-            </div>
-            <div class="task-row">
-              <span>复盘</span>
-              <p>写 1 页实践笔记，判断是否继续深入。</p>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <aside class="chat-panel" aria-label="未来鹅对话区">
-        <div class="chat-header">
-          <div>
-            <p class="eyebrow">Live Demo</p>
-            <h2>和未来鹅对话</h2>
-          </div>
-          <span>Coze API Proxy</span>
         </div>
+        <div class="header-meta" aria-label="产品状态">
+          <span class="version-tag">公开体验版</span>
+          <span class="live-status"><i aria-hidden="true"></i>服务在线</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="product-shell">
+      <aside class="exploration-sidebar" aria-label="职业探索路径">
+        <section class="sidebar-intro">
+          <p class="eyebrow">职业探索工作台</p>
+          <h1>先判断阶段，<br />再决定下一步。</h1>
+          <p>面向仍在探索方向、但希望提前行动的在校大学生。</p>
+        </section>
+
+        <section class="journey-section">
+          <div class="section-heading">
+            <span>探索路径</span>
+            <small>本次对话</small>
+          </div>
+          <ol class="journey-list">
+            <li class="is-current">
+              <span>01</span>
+              <div><strong>阶段诊断</strong><p>年级 × 求职成熟度</p></div>
+            </li>
+            <li>
+              <span>02</span>
+              <div><strong>方向探索</strong><p>匹配 1-3 个岗位方向</p></div>
+            </li>
+            <li>
+              <span>03</span>
+              <div><strong>行动计划</strong><p>生成 4 周轻量任务</p></div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="collection-section">
+          <div class="collection-label"><span aria-hidden="true">+</span> 收藏夹唤醒器</div>
+          <h2>把“以后再看”，变成“这周先做”。</h2>
+          <p>将经验帖、岗位 JD 和工具教程分为本周行动、之后再看与暂存观察。</p>
+        </section>
+
+        <section class="mechanism-section">
+          <div class="section-heading"><span>产品机制</span></div>
+          <ul>
+            <li><span>阶段化</span><p>同一年级，也可能处在不同准备阶段。</p></li>
+            <li><span>结构化</span><p>固定输出岗位认知卡、任务与复盘问题。</p></li>
+            <li><span>行动化</span><p>优先推荐一周内可以完成的小验证。</p></li>
+          </ul>
+        </section>
+
+        <p class="sidebar-note">AI 建议仅用于职业探索参考，重要选择请结合真实实践与多方信息判断。</p>
+      </aside>
+
+      <section class="chat-workspace" aria-label="未来鹅对话工作区">
+        <header class="chat-workspace-header">
+          <div class="assistant-identity">
+            <div class="assistant-avatar" aria-hidden="true">FG</div>
+            <div>
+              <div class="assistant-title-row">
+                <h2>和未来鹅聊聊</h2>
+                <span><i aria-hidden="true"></i>在线</span>
+              </div>
+              <p>描述你的年级、专业、兴趣和最近的迷茫，获得一份可执行的探索建议。</p>
+            </div>
+          </div>
+          <button id="reset-chat" class="reset-button" type="button">重新开始</button>
+        </header>
+
+        <div class="output-preview" aria-label="本次对话输出">
+          <span>本次将生成</span>
+          <ul>
+            <li>阶段判断</li>
+            <li>方向建议</li>
+            <li>岗位认知卡</li>
+            <li>4 周计划</li>
+          </ul>
+        </div>
+
         <div id="futuregoose-chat" class="chat-container">
           <div class="chat-loading">
-            <strong>正在唤醒未来鹅</strong>
-            <p>稍等一下，职业探索对话马上开始。</p>
+            <strong>正在连接未来鹅</strong>
+            <p>职业探索对话马上开始。</p>
           </div>
         </div>
-      </aside>
+      </section>
     </main>
 
-    <script src="./app.js?v=20260714-5"></script>
+    <script src="./app.js?v=20260715-1"></script>
   </body>
 </html>

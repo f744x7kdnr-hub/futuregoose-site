@@ -7,15 +7,18 @@ const quickPrompts = [
   "我已经有一个模糊方向了，你能帮我判断下一步该做项目、找实习还是补能力吗？",
 ];
 
+const initialAssistantContent =
+  "### 你好，我是未来鹅\n我不会急着让你选定一个职业。先告诉我你的年级、专业、兴趣、已有经历，以及最近最困扰你的问题，我们从你现在的位置开始。";
+
 const state = {
   messages: [
     {
       role: "assistant",
-      content:
-        "你好呀，我是未来鹅 FutureGoose。我会先了解你的年级、专业、兴趣、已有经历和最近的迷茫，再帮你判断职业探索阶段，推荐 1-3 个方向，并生成轻量的 4 周行动计划。",
+      content: initialAssistantContent,
     },
   ],
   isSending: false,
+  statusText: "正在识别你的探索阶段...",
 };
 
 const ensureUserId = () => {
@@ -85,9 +88,20 @@ const renderMarkdownLite = (content) => {
     }
 
     const heading = lines[index].match(/^#{1,6}\s+(.*)$/);
-    output.push(
-      heading ? `<strong class="message-heading">${renderInline(heading[1])}</strong>` : renderInline(lines[index]),
-    );
+    const bullet = lines[index].match(/^[-*]\s+(.*)$/);
+    const numbered = lines[index].match(/^(\d+)\.\s+(.*)$/);
+
+    if (heading) {
+      output.push(`<strong class="message-heading">${renderInline(heading[1])}</strong>`);
+    } else if (bullet) {
+      output.push(`<span class="message-list-line"><i></i><span>${renderInline(bullet[1])}</span></span>`);
+    } else if (numbered) {
+      output.push(
+        `<span class="message-list-line numbered"><i>${numbered[1]}</i><span>${renderInline(numbered[2])}</span></span>`,
+      );
+    } else {
+      output.push(renderInline(lines[index]));
+    }
     if (index < lines.length - 1) output.push("<br />");
   }
 
@@ -113,14 +127,19 @@ const renderChat = () => {
             ? `
               <div class="message message-assistant">
                 <div class="message-avatar">FG</div>
-                <div class="message-bubble typing">未来鹅正在整理你的成长路径...</div>
+                <div class="message-bubble typing">${escapeHtml(state.statusText)}</div>
               </div>
             `
             : ""
         }
       </div>
       <div class="quick-prompts">
-        ${quickPrompts.map((prompt) => `<button type="button" class="quick-prompt">${escapeHtml(prompt)}</button>`).join("")}
+        ${quickPrompts
+          .map(
+            (prompt) =>
+              `<button type="button" class="quick-prompt" ${state.isSending ? "disabled" : ""}>${escapeHtml(prompt)}</button>`,
+          )
+          .join("")}
       </div>
       <form class="chat-form">
         <textarea name="message" rows="2" placeholder="告诉未来鹅你的年级、专业、兴趣或收藏夹内容..."></textarea>
@@ -141,6 +160,21 @@ const renderChat = () => {
     textarea.value = "";
     sendMessage(message);
   });
+
+  const textarea = chatRoot.querySelector(".chat-form textarea");
+  textarea.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form.requestSubmit();
+    }
+  });
+  textarea.addEventListener("input", (event) => {
+    event.currentTarget.style.height = "auto";
+    event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 120)}px`;
+  });
+
+  const resetButton = document.getElementById("reset-chat");
+  if (resetButton) resetButton.disabled = state.isSending;
 
   const scroll = document.getElementById("chat-scroll");
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
@@ -175,9 +209,22 @@ const requestAnswer = async () => {
   });
   const pollingDeadline = Date.now() + 90000;
   let consecutiveNetworkErrors = 0;
+  let pollingCount = 0;
+  let loadingStage = 0;
 
   while (Date.now() < pollingDeadline) {
     await new Promise((resolve) => setTimeout(resolve, 1200));
+    pollingCount += 1;
+
+    const nextStage = pollingCount >= 18 ? 2 : pollingCount >= 7 ? 1 : 0;
+    if (nextStage !== loadingStage) {
+      loadingStage = nextStage;
+      state.statusText =
+        loadingStage === 2
+          ? "正在整理四周行动计划..."
+          : "正在匹配适合继续探索的方向...";
+      renderChat();
+    }
 
     try {
       const statusResponse = await fetch(`/api/chat?${query}`, {
@@ -215,6 +262,7 @@ const sendMessage = async (content) => {
 
   state.messages.push({ role: "user", content });
   state.isSending = true;
+  state.statusText = "正在识别你的探索阶段...";
   renderChat();
 
   try {
@@ -238,3 +286,10 @@ const sendMessage = async (content) => {
 };
 
 renderChat();
+
+document.getElementById("reset-chat")?.addEventListener("click", () => {
+  if (state.isSending) return;
+  state.messages = [{ role: "assistant", content: initialAssistantContent }];
+  state.statusText = "正在识别你的探索阶段...";
+  renderChat();
+});
