@@ -1,10 +1,10 @@
 const chatRoot = document.getElementById("futuregoose-chat");
 
 const quickPrompts = [
-  "我是大一学生，还不知道未来适合什么方向，可以帮我分析吗？",
-  "我收藏了很多求职/学习经验帖，但一直没有开始做，你能帮我整理成计划吗？",
-  "我想了解互联网公司有哪些岗位，以及低年级可以怎么准备。",
-  "我已经有一个模糊方向了，你能帮我判断下一步该做项目、找实习还是补能力吗？",
+  { index: "01", text: "我是大一学生，还不知道未来适合什么方向，可以帮我分析吗？" },
+  { index: "02", text: "我收藏了很多求职/学习经验帖，但一直没有开始做，你能帮我整理成计划吗？" },
+  { index: "03", text: "我想了解互联网公司有哪些岗位，以及低年级可以怎么准备。" },
+  { index: "04", text: "我已经有一个模糊方向了，你能帮我判断下一步该做项目、找实习还是补能力吗？" },
 ];
 
 const initialAssistantContent =
@@ -137,19 +137,23 @@ const renderChat = () => {
         ${quickPrompts
           .map(
             (prompt) =>
-              `<button type="button" class="quick-prompt" ${state.isSending ? "disabled" : ""}>${escapeHtml(prompt)}</button>`,
+              `<button type="button" class="quick-prompt" data-prompt="${escapeHtml(prompt.text)}" ${state.isSending ? "disabled" : ""}>
+                <span class="quick-prompt-index">${prompt.index}</span>
+                <span>${escapeHtml(prompt.text)}</span>
+                <span class="quick-prompt-arrow" aria-hidden="true">›</span>
+              </button>`,
           )
           .join("")}
       </div>
       <form class="chat-form">
-        <textarea name="message" rows="2" placeholder="告诉未来鹅你的年级、专业、兴趣或收藏夹内容..."></textarea>
-        <button type="submit" ${state.isSending ? "disabled" : ""}>发送</button>
+        <textarea name="message" rows="2" aria-label="对话内容" placeholder="告诉未来鹅你的年级、专业、兴趣或收藏夹内容..."></textarea>
+        <button type="submit" ${state.isSending ? "disabled" : ""}><span>发送</span><i aria-hidden="true">→</i></button>
       </form>
     </div>
   `;
 
   chatRoot.querySelectorAll(".quick-prompt").forEach((button) => {
-    button.addEventListener("click", () => sendMessage(button.textContent.trim()));
+    button.addEventListener("click", () => sendMessage(button.dataset.prompt));
   });
 
   chatRoot.querySelector(".chat-form").addEventListener("submit", (event) => {
@@ -292,4 +296,12 @@ document.getElementById("reset-chat")?.addEventListener("click", () => {
   state.messages = [{ role: "assistant", content: initialAssistantContent }];
   state.statusText = "正在识别你的探索阶段...";
   renderChat();
+});
+
+document.getElementById("collection-action")?.addEventListener("click", () => {
+  if (state.isSending) return;
+  const textarea = chatRoot.querySelector(".chat-form textarea");
+  textarea.value = quickPrompts[1].text;
+  textarea.dispatchEvent(new Event("input"));
+  textarea.focus();
 });
